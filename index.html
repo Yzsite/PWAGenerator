@@ -256,12 +256,7 @@
     </div>
 
     <div id="pwaView">
-        <img id="pwaTitleIcon" src="" alt="アプリアイコン">
-        <h2 id="pwaTitle">アプリを起動しています</h2>
-        <p id="redirectMessage">
-            <span id="targetUrlDisplay"></span> へ
-            <span class="redirect-countdown" id="countdown">3</span>秒後にリダイレクトします
-        </p>
+
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -398,7 +393,7 @@
                 const manifest = {
                     name: title,
                     short_name: title,
-                    description: `${title} - PWAリダイレクトアプリ`,
+                    description: title,
                     start_url: window.location.href,
                     display: 'standalone',
                     background_color: '#ffffff',
@@ -445,13 +440,8 @@
                         installView.style.display = 'none';
                         pwaView.style.display = 'block';
                         
-                        document.getElementById('pwaTitleIcon').src = image;
-                        document.getElementById('pwaTitle').textContent = title;
-                        document.getElementById('targetUrlDisplay').textContent = url;
-                        
                         // カウントダウン後にリダイレクト
                         let count = 0;
-                        const countdownElement = document.getElementById('countdown');
                         
                         const interval = setInterval(() => {
                             count--;
