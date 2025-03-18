@@ -101,12 +101,30 @@
             margin-top: 20px;
         }
         
-        .result-url {
-            word-break: break-all;
+        .url-container {
+            display: flex;
+            align-items: center;
             background-color: #f1f1f1;
             padding: 10px;
             border-radius: 4px;
             margin: 10px 0;
+        }
+        
+        .url-text {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 10px;
+        }
+        
+        .copy-button {
+            background-color: #FF9800;
+            flex-shrink: 0;
+        }
+        
+        .copy-button:hover {
+            background-color: #F57C00;
         }
         
         .instructions {
@@ -203,24 +221,6 @@
             font-weight: bold;
             color: #1565c0;
         }
-        
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .button-group button {
-            flex: 1;
-        }
-        
-        .copy-button {
-            background-color: #FF9800;
-        }
-        
-        .copy-button:hover {
-            background-color: #F57C00;
-        }
     </style>
 </head>
 <body>
@@ -249,12 +249,12 @@
         
         <div id="resultContainer">
             <h2>生成されたURL</h2>
-            <div class="result-url" id="generatedUrl"></div>
-            
-            <div class="button-group">
-                <button id="copyButton" class="copy-button">URLをコピー</button>
-                <button id="navigateButton">生成したURLに移動</button>
+            <div class="url-container">
+                <div class="url-text" id="generatedUrl"></div>
+                <button id="copyButton" class="copy-button">コピー</button>
             </div>
+            
+            <button id="navigateButton">生成したURLに移動</button>
             
             <div class="qr-code">
                 <div id="qrcode"></div>
@@ -417,7 +417,7 @@
                         .then(() => {
                             // 成功時の処理
                             const originalText = copyButton.textContent;
-                            copyButton.textContent = 'コピーしました！';
+                            copyButton.textContent = 'コピー完了!';
                             setTimeout(() => {
                                 copyButton.textContent = originalText;
                             }, 2000);
@@ -516,6 +516,16 @@
                         creatorView.style.display = 'none';
                         installView.style.display = 'none';
                         pwaView.style.display = 'block';
+                        
+                        // リダイレクトメッセージとカウントダウン表示
+                        pwaView.innerHTML = `
+                            <img src="${image}" alt="${title}">
+                            <h2>${title}</h2>
+                            <div id="redirectMessage">
+                                <p><span class="redirect-countdown">3</span>秒後に自動的にリダイレクトします...</p>
+                            </div>
+                            <button id="redirectNowButton">今すぐ移動</button>
+                        `;
                         
                         const countdownElement = document.querySelector('.redirect-countdown');
                         const redirectNowButton = document.getElementById('redirectNowButton');
