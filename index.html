@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
-▄▀ █▀▀ ▀▄ ▀█ █▀█ ▀█ █▀   █▄█ ▀█ █▀ █ ▀█▀ █▀▀
-▀▄ █▄▄ ▄▀ █▄ █▄█ █▄ ▄█   ░█░ █▄ ▄█ █ ░█░ ██▄
+▄▀ █▀▀ ▀▄ ▀█ █▀█ ▀█ █▀   █▄█ ▀█ █▀ █ ▀█▀ █▀▀
+▀▄ █▄▄ ▄▀ █▄ █▄█ █▄ ▄█   ░█░ █▄ ▄█ █ ░█░ ██▄
 -->
 <html lang="ja">
 <head>
@@ -73,6 +73,17 @@
         
         button:hover {
             background-color: #45a049;
+        }
+        
+        #navigateButton {
+            background-color: #2196F3;
+            margin-top: 15px;
+            display: block;
+            width: 100%;
+        }
+        
+        #navigateButton:hover {
+            background-color: #0b7dda;
         }
         
         #imagePreview {
@@ -192,6 +203,24 @@
             font-weight: bold;
             color: #1565c0;
         }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        .copy-button {
+            background-color: #FF9800;
+        }
+        
+        .copy-button:hover {
+            background-color: #F57C00;
+        }
     </style>
 </head>
 <body>
@@ -221,6 +250,11 @@
         <div id="resultContainer">
             <h2>生成されたURL</h2>
             <div class="result-url" id="generatedUrl"></div>
+            
+            <div class="button-group">
+                <button id="copyButton" class="copy-button">URLをコピー</button>
+                <button id="navigateButton">生成したURLに移動</button>
+            </div>
             
             <div class="qr-code">
                 <div id="qrcode"></div>
@@ -333,9 +367,12 @@
             const creatorView = document.getElementById('creatorView');
             const installView = document.getElementById('installView');
             const pwaView = document.getElementById('pwaView');
+            const navigateButton = document.getElementById('navigateButton');
+            const copyButton = document.getElementById('copyButton');
             
             let base64Image = '';
             let deferredPrompt;
+            let generatedUrlValue = '';
             
             // PWAのインストールプロンプト
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -366,6 +403,32 @@
                 }
             });
             
+            // 生成したURLに移動するボタンのクリックイベント
+            navigateButton.addEventListener('click', function() {
+                if (generatedUrlValue) {
+                    window.location.href = generatedUrlValue;
+                }
+            });
+            
+            // URLをコピーするボタンのクリックイベント
+            copyButton.addEventListener('click', function() {
+                if (generatedUrlValue) {
+                    navigator.clipboard.writeText(generatedUrlValue)
+                        .then(() => {
+                            // 成功時の処理
+                            const originalText = copyButton.textContent;
+                            copyButton.textContent = 'コピーしました！';
+                            setTimeout(() => {
+                                copyButton.textContent = originalText;
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('コピーに失敗しました:', err);
+                            alert('URLのコピーに失敗しました。');
+                        });
+                }
+            });
+            
             // URL生成ボタンのクリックイベント
             generateButton.addEventListener('click', function() {
                 const title = titleInput.value.trim();
@@ -384,16 +447,16 @@
                 
                 // 現在のURLを取得
                 const currentUrl = window.location.href.split('?')[0];
-                const finalUrl = `${currentUrl}?${params.toString()}`;
+                generatedUrlValue = `${currentUrl}?${params.toString()}`;
                 
                 // 結果を表示
-                generatedUrl.textContent = finalUrl;
+                generatedUrl.textContent = generatedUrlValue;
                 resultContainer.style.display = 'block';
                 
                 // QRコードを生成
                 qrCodeContainer.innerHTML = '';
                 new QRCode(qrCodeContainer, {
-                    text: finalUrl,
+                    text: generatedUrlValue,
                     width: 128,
                     height: 128
                 });
@@ -453,6 +516,13 @@
                         creatorView.style.display = 'none';
                         installView.style.display = 'none';
                         pwaView.style.display = 'block';
+                        
+                        const countdownElement = document.querySelector('.redirect-countdown');
+                        const redirectNowButton = document.getElementById('redirectNowButton');
+                        
+                        redirectNowButton.addEventListener('click', function() {
+                            window.location.href = url;
+                        });
                         
                         // カウントダウン後にリダイレクト
                         let count = 0;
