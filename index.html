@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ホーム画面追加ツール</title>
+    <link rel="manifest" id="dynamic-manifest">
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .form-container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        #imagePreview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        #resultContainer {
+            display: none;
+            background-color: #e9f7ef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .result-url {
+            word-break: break-all;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .step {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .pwa-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 8px;
+        }
+
+        .install-button {
+            display: none;
+            margin-top: 15px;
+            background-color: #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <h1>ホーム画面追加ツール</h1>
+    
+    <div class="form-container">
+        <div class="form-group">
+            <label for="imageInput">アイコン画像:</label>
+            <input type="file" id="imageInput" accept="image/*">
+            <img id="imagePreview" alt="プレビュー">
+        </div>
+        
+        <div class="form-group">
+            <label for="titleInput">タイトル:</label>
+            <input type="text" id="titleInput" placeholder="ホーム画面に表示するタイトル">
+        </div>
+        
+        <div class="form-group">
+            <label for="urlInput">URL:</label>
+            <input type="url" id="urlInput" placeholder="https://example.com">
+        </div>
+        
+        <button id="generateButton">生成する</button>
+    </div>
+    
+    <div id="resultContainer">
+        <h2>生成されたURL</h2>
+        <div class="result-url" id="generatedUrl"></div>
+        
+        <div class="qr-code">
+            <div id="qrcode"></div>
+            <p>QRコードをスキャンしてアクセスできます</p>
+        </div>
+
+        <div class="pwa-info" id="pwaInfo">
+            <h3>PWAとしてインストール</h3>
+            <p>このページはPWAとしてインストールできます。ブラウザのメニューからインストールしてください。</p>
+            <button id="installButton" class="install-button">アプリをインストール</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>ホーム画面への追加方法</h3>
+            
+            <h4>iPhone (iOS):</h4>
+            <ol>
+                <li><span class="step">ステップ1:</span> 上記のURLをSafariでアクセスします</li>
+                <li><span class="step">ステップ2:</span> 画面下部の「共有」ボタン（四角から上向きの矢印）をタップします</li>
+                <li><span class="step">ステップ3:</span> 「ホーム画面に追加」をタップします</li>
+                <li><span class="step">ステップ4:</span> タイトルを確認し、右上の「追加」をタップします</li>
+            </ol>
+            
+            <h4>Android:</h4>
+            <ol>
+                <li><span class="step">ステップ1:</span> 上記のURLをChromeでアクセスします</li>
+                <li><span class="step">ステップ2:</span> インストールプロンプトが表示されない場合は、メニューボタン（右上の三点リーダー）をタップします</li>
+                <li><span class="step">ステップ3:</span> 「アプリをインストール」または「ホーム画面に追加」をタップします</li>
+                <li><span class="step">ステップ4:</span> タイトルを確認し、「インストール」をタップします</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // サービスワーカーの登録
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        // サービスワーカーの内容を動的に生成
+        function createServiceWorker() {
+            const swContent = `
+                const CACHE_NAME = 'pwa-home-screen-tool-v1';
+                const urlsToCache = [
+                    './',
+                    './index.html',
+                    'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
+                ];
+
+                self.addEventListener('install', function(event) {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME)
+                            .then(function(cache) {
+                                return cache.addAll(urlsToCache);
+                            })
+                    );
+                });
+
+                self.addEventListener('fetch', function(event) {
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(function(response) {
+                                if (response) {
+                                    return response;
+                                }
+                                return fetch(event.request);
+                            })
+                    );
+                });
+            `;
+
+            const blob = new Blob([swContent], {type: 'text/javascript'});
+            return URL.createObjectURL(blob);
+        }
+
+        // 動的にサービスワーカーを作成して登録
+        if ('serviceWorker' in navigator) {
+            const swUrl = createServiceWorker();
+            navigator.serviceWorker.register(swUrl)
+                .then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageInput = document.getElementById('imageInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const titleInput = document.getElementById('titleInput');
+            const urlInput = document.getElementById('urlInput');
+            const generateButton = document.getElementById('generateButton');
+            const resultContainer = document.getElementById('resultContainer');
+            const generatedUrl = document.getElementById('generatedUrl');
+            const qrCodeContainer = document.getElementById('qrcode');
+            const installButton = document.getElementById('installButton');
+            
+            let base64Image = '';
+            let deferredPrompt;
+            
+            // PWAのインストールプロンプト
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installButton.style.display = 'block';
+            });
+
+            installButton.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    installButton.style.display = 'none';
+                }
+            });
+            
+            // 画像プレビューの表示
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        base64Image = event.target.result;
+                        imagePreview.src = base64Image;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // URL生成ボタンのクリックイベント
+            generateButton.addEventListener('click', function() {
+                const title = titleInput.value.trim();
+                const url = urlInput.value.trim();
+                
+                if (!title || !url || !base64Image) {
+                    alert('すべての項目を入力してください');
+                    return;
+                }
+                
+                // URLパラメータの作成
+                const params = new URLSearchParams();
+                params.append('title', title);
+                params.append('url', url);
+                params.append('image', base64Image);
+                
+                // 現在のURLを取得
+                const currentUrl = window.location.href.split('?')[0];
+                const finalUrl = `${currentUrl}?${params.toString()}`;
+                
+                // 結果を表示
+                generatedUrl.textContent = finalUrl;
+                resultContainer.style.display = 'block';
+                
+                // QRコードを生成
+                qrCodeContainer.innerHTML = '';
+                new QRCode(qrCodeContainer, {
+                    text: finalUrl,
+                    width: 128,
+                    height: 128
+                });
+                
+                // Web App Manifestを動的に生成
+                createManifest(title, base64Image);
+                
+                // 自動でスクロール
+                resultContainer.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 動的にマニフェストを生成
+            function createManifest(title, iconUrl) {
+                const manifest = {
+                    name: title,
+                    short_name: title,
+                    description: title,
+                    start_url: window.location.href,
+                    display: 'standalone',
+                    background_color: '#ffffff',
+                    theme_color: '#4CAF50',
+                    icons: [
+                        {
+                            src: iconUrl,
+                            sizes: '192x192',
+                            type: 'image/png'
+                        },
+                        {
+                            src: iconUrl,
+                            sizes: '512x512',
+                            type: 'image/png'
+                        }
+                    ]
+                };
+
+                const manifestContent = JSON.stringify(manifest);
+                const manifestBlob = new Blob([manifestContent], {type: 'application/json'});
+                const manifestURL = URL.createObjectURL(manifestBlob);
+
+                // 既存のマニフェストリンクを更新
+                let manifestLink = document.getElementById('dynamic-manifest');
+                if (manifestLink) {
+                    manifestLink.href = manifestURL;
+                } else {
+                    manifestLink = document.createElement('link');
+                    manifestLink.id = 'dynamic-manifest';
+                    manifestLink.rel = 'manifest';
+                    manifestLink.href = manifestURL;
+                    document.head.appendChild(manifestLink);
+                }
+            }
+            
+            // URLパラメータをチェックして、既存のパラメータがあればそれを表示
+            window.addEventListener('load', function() {
+                const params = new URLSearchParams(window.location.search);
+                
+                if (params.has('title') && params.has('url') && params.has('image')) {
+                    const title = params.get('title');
+                    const url = params.get('url');
+                    const image = params.get('image');
+                    
+                    // メタタグを追加
+                    const head = document.querySelector('head');
+                    
+                    const iconLink = document.createElement('link');
+                    iconLink.rel = 'icon';
+                    iconLink.href = image;
+                    head.appendChild(iconLink);
+                    
+                    const appleIconLink = document.createElement('link');
+                    appleIconLink.rel = 'apple-touch-icon';
+                    appleIconLink.href = image;
+                    head.appendChild(appleIconLink);
+                    
+                    const titleMeta = document.createElement('meta');
+                    titleMeta.name = 'apple-mobile-web-app-title';
+                    titleMeta.content = title;
+                    head.appendChild(titleMeta);
+                    
+                    // PWAマニフェストの生成
+                    createManifest(title, image);
+                    
+                    // リダイレクト用のJavaScriptを追加
+                    const script = document.createElement('script');
+                    script.textContent = `
+                        // スマートフォンからのアクセスの場合、PWAでなければ指定されたURLへリダイレクト
+                        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches) {
+                            window.location.href = "${url}";
+                        }
+                    `;
+                    document.body.appendChild(script);
+                    
+                    document.title = title;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
