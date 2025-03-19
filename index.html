@@ -457,7 +457,7 @@
                 // QRコードを生成（Google Chart API使用）
                 qrCodeContainer.innerHTML = '';
                 try {
-                    const googleChartApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(generatedUrlValue)}`;
+                    const googleChartApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${decodeURI(urlInput)}`;
                     qrCodeContainer.innerHTML = `<img src="${googleChartApiUrl}" alt="QRコード">`;
                     console.log('QRコード生成成功');
                 } catch(error) {
