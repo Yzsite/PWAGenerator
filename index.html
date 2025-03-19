@@ -256,11 +256,6 @@
             
             <button id="navigateButton">生成したURLに移動</button>
             
-            <div class="qr-code">
-                <div id="qrcode" style="min-height: 128px; min-width: 128px; margin: 0 auto;"></div>
-                <p>QRコードをスキャンしてアクセスできます</p>
-            </div>
-            
             <div class="instructions">
                 <h3>使用方法の説明</h3>
                 <p>生成されたURLをスマートフォンで開くと、以下のように動作します：</p>
@@ -455,17 +450,6 @@
                 resultContainer.style.display = 'block';
 
                 let urlInput = document.getElementById('urlInput');
-                
-                // QRコードを生成（Google Chart API使用）
-                qrCodeContainer.innerHTML = '';
-                try {
-                    const googleChartApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='+urlInput;
-                    qrCodeContainer.innerHTML = `<img src="${googleChartApiUrl}" alt="QRコード">`;
-                    console.log('QRコード生成成功');
-                } catch(error) {
-                    console.error('QRコード生成エラー:', error);
-                    qrCodeContainer.innerHTML = '<p>QRコードの生成に失敗しました。</p>';
-                }
                 
                 // 自動でスクロール
                 resultContainer.scrollIntoView({ behavior: 'smooth' });
