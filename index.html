@@ -454,13 +454,11 @@
                 generatedUrl.textContent = generatedUrlValue;
                 resultContainer.style.display = 'block';
                 
-                // QRコードを生成（代替実装）
+                // QRコードを生成（Google Chart API使用）
                 qrCodeContainer.innerHTML = '';
                 try {
-                    const qr = qrcode(0, 'M');
-                    qr.addData(generatedUrlValue);
-                    qr.make();
-                    qrCodeContainer.innerHTML = qr.createImgTag(4);
+                    const googleChartApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(generatedUrlValue)}`;
+                    qrCodeContainer.innerHTML = `<img src="${googleChartApiUrl}" alt="QRコード">`;
                     console.log('QRコード生成成功');
                 } catch(error) {
                     console.error('QRコード生成エラー:', error);
