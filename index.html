@@ -453,11 +453,13 @@
                 // 結果を表示
                 generatedUrl.textContent = generatedUrlValue;
                 resultContainer.style.display = 'block';
+
+                let urlInput = document.getElementById('urlInput');
                 
                 // QRコードを生成（Google Chart API使用）
                 qrCodeContainer.innerHTML = '';
                 try {
-                    const googleChartApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${urlInput}`;
+                    const googleChartApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='+urlInput;
                     qrCodeContainer.innerHTML = `<img src="${googleChartApiUrl}" alt="QRコード">`;
                     console.log('QRコード生成成功');
                 } catch(error) {
