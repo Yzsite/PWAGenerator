@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<!--
+▄▀ █▀▀ ▀▄ ▀█ █▀█ ▀█ █▀   █▄█ ▀█ █▀ █ ▀█▀ █▀▀
+▀▄ █▄▄ ▄▀ █▄ █▄█ █▄ ▄█   ░█░ █▄ ▄█ █ ░█░ ██▄
+-->
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta property="og:site_name" content="yzsite">
+    <meta property="og:url" content="https://yzsite.github.io/PWAGenerator">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="PWAジェネレーター">
+    <meta property="og:description" content="自分好みのPWAを生成出来ます！">
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Progressive_Web_Apps_Logo.svg/1280px-Progressive_Web_Apps_Logo.svg.png">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="482">
+    <meta property="og:image:type" content="image/png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ホーム画面追加ツール</title>
+    <link rel="manifest" id="dynamic-manifest">
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .form-container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        #navigateButton {
+            background-color: #2196F3;
+            margin-top: 15px;
+            display: block;
+            width: 100%;
+        }
+        
+        #navigateButton:hover {
+            background-color: #0b7dda;
+        }
+        
+        #imagePreview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        #resultContainer {
+            display: none;
+            background-color: #e9f7ef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .url-container {
+            display: flex;
+            align-items: center;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .url-text {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 10px;
+        }
+        
+        .copy-button {
+            background-color: #FF9800;
+            flex-shrink: 0;
+        }
+        
+        .copy-button:hover {
+            background-color: #F57C00;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .step {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .install-prompt {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .install-prompt h2 {
+            margin-top: 0;
+            color: #1565c0;
+        }
+
+        .install-prompt img {
+            max-width: 80px;
+            margin: 15px auto;
+            display: block;
+        }
+
+        .install-instructions {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .install-button {
+            display: inline-block;
+            margin-top: 15px;
+            background-color: #2196F3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .target-url {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+
+        #pwaView {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #pwaView img {
+            max-width: 100px;
+            margin: 20px auto;
+        }
+
+        #redirectMessage {
+            font-size: 18px;
+            margin: 20px 0;
+        }
+
+        #redirectNowButton {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div id="creatorView">
+        <h1>ホーム画面追加ツール</h1>
+        
+        <div class="form-container">
+            <div class="form-group">
+                <label for="imageInput">アイコン画像:</label>
+                <input type="file" id="imageInput" accept="image/*">
+                <img id="imagePreview" alt="プレビュー">
+            </div>
+            
+            <div class="form-group">
+                <label for="titleInput">タイトル:</label>
+                <input type="text" id="titleInput" placeholder="ホーム画面に表示するタイトル">
+            </div>
+            
+            <div class="form-group">
+                <label for="urlInput">URL:</label>
+                <input type="url" id="urlInput" placeholder="https://example.com">
+            </div>
+            
+            <button id="generateButton">生成する</button>
+        </div>
+        
+        <div id="resultContainer">
+            <h2>生成されたURL</h2>
+            <div class="url-container">
+                <div class="url-text" id="generatedUrl"></div>
+                <button id="copyButton" class="copy-button">コピー</button>
+            </div>
+            
+            <button id="navigateButton">生成したURLに移動</button>
+            
+            <div class="qr-code">
+                <div id="qrcode"></div>
+                <p>QRコードをスキャンしてアクセスできます</p>
+            </div>
+            
+            <div class="instructions">
+                <h3>使用方法の説明</h3>
+                <p>生成されたURLをスマートフォンで開くと、以下のように動作します：</p>
+                <ul>
+                    <li><span class="badge">PWAとしてインストール済み</span> 指定したURLに自動的にリダイレクトされます</li>
+                    <li><span class="badge">通常のブラウザ</span> PWAのインストール方法が表示されます</li>
+                </ul>
+                <p>インストール後にアプリを開くと、指定したURLへ自動的にリダイレクトされます。</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="installView" class="hidden">
+        <div class="install-prompt">
+            <h2 id="appTitle">アプリをインストールしてください</h2>
+            <img id="appIcon" src="" alt="アプリアイコン">
+            <p>このページは<strong>ホーム画面に追加</strong>することで正常に機能します。</p>
+            <p>インストール後に開くと、自動的に指定のURLへリダイレクトします。</p>
+            <div id="targetUrl" class="target-url"></div>
+            <button id="installButton" class="install-button">アプリをインストール</button>
+            <div class="install-instructions">
+                <h3>手動でインストールする方法:</h3>
+                <div id="iosInstructions">
+                    <h4>iPhone (iOS):</h4>
+                    <ol>
+                        <li><span class="step">ステップ1:</span> 画面下部の「共有」ボタン（四角から上向きの矢印）をタップ</li>
+                        <li><span class="step">ステップ2:</span> 「ホーム画面に追加」をタップ</li>
+                        <li><span class="step">ステップ3:</span> 右上の「追加」をタップ</li>
+                    </ol>
+                </div>
+                <div id="androidInstructions">
+                    <h4>Android:</h4>
+                    <ol>
+                        <li><span class="step">ステップ1:</span> メニューボタン（右上の三点リーダー）をタップ</li>
+                        <li><span class="step">ステップ2:</span> 「アプリをインストール」または「ホーム画面に追加」をタップ</li>
+                        <li><span class="step">ステップ3:</span> 「インストール」をタップ</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pwaView">
+        <!-- ここには一時的なコンテンツのみを表示します -->
+    </div>
+
+    <script>
+        // サービスワーカーの登録
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                // サービスワーカーの内容を動的に生成
+                const swContent = `
+                    const CACHE_NAME = 'pwa-redirect-tool-v1';
+                    const urlsToCache = [
+                        './',
+                        './index.html'
+                    ];
+
+                    self.addEventListener('install', function(event) {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then(function(cache) {
+                                    return cache.addAll(urlsToCache);
+                                })
+                        );
+                    });
+
+                    self.addEventListener('fetch', function(event) {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(function(response) {
+                                    if (response) {
+                                        return response;
+                                    }
+                                    return fetch(event.request);
+                                })
+                        );
+                    });
+                `;
+
+                const blob = new Blob([swContent], {type: 'text/javascript'});
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl).then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageInput = document.getElementById('imageInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const titleInput = document.getElementById('titleInput');
+            const urlInput = document.getElementById('urlInput');
+            const generateButton = document.getElementById('generateButton');
+            const resultContainer = document.getElementById('resultContainer');
+            const generatedUrl = document.getElementById('generatedUrl');
+            const qrCodeContainer = document.getElementById('qrcode');
+            const installButton = document.getElementById('installButton');
+            const creatorView = document.getElementById('creatorView');
+            const installView = document.getElementById('installView');
+            const pwaView = document.getElementById('pwaView');
+            const navigateButton = document.getElementById('navigateButton');
+            const copyButton = document.getElementById('copyButton');
+            
+            let base64Image = '';
+            let deferredPrompt;
+            let generatedUrlValue = '';
+            
+            // PWAのインストールプロンプト
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installButton.style.display = 'block';
+            });
+
+            installButton.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                }
+            });
+            
+            // 画像プレビューの表示
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        base64Image = event.target.result;
+                        imagePreview.src = base64Image;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // 生成したURLに移動するボタンのクリックイベント
+            navigateButton.addEventListener('click', function() {
+                if (generatedUrlValue) {
+                    window.location.href = generatedUrlValue;
+                }
+            });
+            
+            // URLをコピーするボタンのクリックイベント
+            copyButton.addEventListener('click', function() {
+                if (generatedUrlValue) {
+                    navigator.clipboard.writeText(generatedUrlValue)
+                        .then(() => {
+                            // 成功時の処理
+                            const originalText = copyButton.textContent;
+                            copyButton.textContent = 'コピー完了!';
+                            setTimeout(() => {
+                                copyButton.textContent = originalText;
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('コピーに失敗しました:', err);
+                            alert('URLのコピーに失敗しました。');
+                        });
+                }
+            });
+            
+            // URL生成ボタンのクリックイベント
+            generateButton.addEventListener('click', function() {
+                const title = titleInput.value.trim();
+                const url = urlInput.value.trim();
+                
+                if (!title || !url || !base64Image) {
+                    alert('すべての項目を入力してください');
+                    return;
+                }
+                
+                // URLパラメータの作成
+                const params = new URLSearchParams();
+                params.append('title', title);
+                params.append('url', url);
+                params.append('image', base64Image);
+                
+                // 現在のURLを取得
+                const currentUrl = window.location.href.split('?')[0];
+                generatedUrlValue = `${currentUrl}?${params.toString()}`;
+                
+                // 結果を表示
+                generatedUrl.textContent = generatedUrlValue;
+                resultContainer.style.display = 'block';
+                
+                // QRコードを生成（goqr.meのAPIを使用）
+                qrCodeContainer.innerHTML = '';
+                try {
+                    const goqrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${decodeURI(generatedUrlValue)}`;
+                    qrCodeContainer.innerHTML = `<img src="${goqrUrl}" alt="QRコード">`;
+                    console.log('QRコード生成成功（goqr.me API使用）');
+                } catch(error) {
+                    console.error('QRコード生成エラー:', error);
+                    qrCodeContainer.innerHTML = '<p>QRコードの生成に失敗しました。</p>';
+                }
+                
+                // 自動でスクロール
+                resultContainer.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 動的にマニフェストを生成
+            function createManifest(title, iconUrl, targetUrl) {
+                const manifest = {
+                    name: title,
+                    short_name: title,
+                    description: title,
+                    start_url: window.location.href,
+                    display: 'standalone',
+                    background_color: '#ffffff',
+                    theme_color: '#4CAF50',
+                    icons: [
+                        {
+                            src: iconUrl,
+                            sizes: '192x192',
+                            type: 'image/png'
+                        },
+                        {
+                            src: iconUrl,
+                            sizes: '512x512',
+                            type: 'image/png'
+                        }
+                    ]
+                };
+
+                const manifestContent = JSON.stringify(manifest);
+                const manifestBlob = new Blob([manifestContent], {type: 'application/json'});
+                const manifestURL = URL.createObjectURL(manifestBlob);
+                
+                // マニフェストリンクを設定
+                let manifestLink = document.getElementById('dynamic-manifest');
+                manifestLink.href = manifestURL;
+            }
+
+            // URLパラメータをチェック
+            window.addEventListener('load', function() {
+                const params = new URLSearchParams(window.location.search);
+                
+                if (params.has('title') && params.has('url') && params.has('image')) {
+                    const title = params.get('title');
+                    const url = params.get('url');
+                    const image = params.get('image');
+                    
+                    // PWAとしてインストールされているかチェック
+                    const isPwa = window.matchMedia('(display-mode: standalone)').matches || 
+                                  window.navigator.standalone === true;
+                    
+                    if (isPwa) {
+                        // PWAとしてインストールされている場合、直接リダイレクト
+                        creatorView.style.display = 'none';
+                        installView.style.display = 'none';
+                        pwaView.style.display = 'block';
+                        
+                        // 一時的な表示（実際にはほぼ見えない）
+                        pwaView.innerHTML = `
+                            <div id="temp"></div>
+                        `;
+                        
+                        const redirectNowButton = document.getElementById('redirectNowButton');
+                        
+                        redirectNowButton.addEventListener('click', function() {
+                            window.location.href = url;
+                        });
+                        
+                        // 即時リダイレクト
+                        window.location.href = url;
+                    } else {
+                        // 通常のブラウザでアクセスした場合、インストール方法を表示
+                        creatorView.style.display = 'none';
+                        installView.style.display = 'block';
+                        pwaView.style.display = 'none';
+                        
+                        // メタタグを追加
+                        const head = document.querySelector('head');
+                        
+                        const iconLink = document.createElement('link');
+                        iconLink.rel = 'icon';
+                        iconLink.href = image;
+                        head.appendChild(iconLink);
+                        
+                        const appleIconLink = document.createElement('link');
+                        appleIconLink.rel = 'apple-touch-icon';
+                        appleIconLink.href = image;
+                        head.appendChild(appleIconLink);
+                        
+                        const titleMeta = document.createElement('meta');
+                        titleMeta.name = 'apple-mobile-web-app-title';
+                        titleMeta.content = title;
+                        head.appendChild(titleMeta);
+                        
+                        // PWAマニフェストの生成
+                        createManifest(title, image, url);
+                        
+                        // 表示内容の設定
+                        document.getElementById('appTitle').textContent = title;
+                        document.getElementById('appIcon').src = image;
+                        document.getElementById('targetUrl').textContent = url;
+                        
+                        // デバイスタイプに応じて表示内容を変更
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                        if (isIOS) {
+                            document.getElementById('androidInstructions').style.display = 'none';
+                            document.getElementById('installButton').style.display = 'none';
+                        } else {
+                            document.getElementById('iosInstructions').style.display = 'none';
+                        }
+                        
+                        document.title = `${title} - インストール`;
+                    }
+                } else {
+                    // パラメータがない場合は作成画面を表示
+                    creatorView.style.display = 'block';
+                    installView.style.display = 'none';
+                    pwaView.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
