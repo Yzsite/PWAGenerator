@@ -371,6 +371,89 @@
             let deferredPrompt;
             let generatedUrlValue = '';
             
+            // ASCII85エンコーディング関数
+            function ascii85Encode(data) {
+                const input = atob(data.split(',')[1]);
+                let output = '';
+                
+                for (let i = 0; i < input.length; i += 4) {
+                    let chunk = 0;
+                    
+                    for (let j = 0; j < 4; j++) {
+                        if (i + j < input.length) {
+                            chunk = (chunk << 8) | input.charCodeAt(i + j);
+                        } else {
+                            chunk = chunk << 8;
+                        }
+                    }
+                    
+                    if (chunk === 0) {
+                        output += 'z';
+                    } else {
+                        let digits = '';
+                        for (let j = 0; j < 5; j++) {
+                            digits = String.fromCharCode(chunk % 85 + 33) + digits;
+                            chunk = Math.floor(chunk / 85);
+                        }
+                        output += digits;
+                    }
+                }
+                
+                // 余りのバイト数を考慮
+                const paddingCount = input.length % 4;
+                if (paddingCount > 0) {
+                    output = output.slice(0, output.length - (4 - paddingCount));
+                }
+                
+                return output;
+            }
+
+            // ASCII85デコーディング関数
+            function ascii85Decode(data) {
+                let output = '';
+                let chunk = 0;
+                let count = 0;
+                
+                for (let i = 0; i < data.length; i++) {
+                    const char = data[i];
+                    
+                    if (char === 'z') {
+                        output += String.fromCharCode(0, 0, 0, 0);
+                        continue;
+                    }
+                    
+                    chunk = chunk * 85 + (char.charCodeAt(0) - 33);
+                    count++;
+                    
+                    if (count === 5) {
+                        output += String.fromCharCode(
+                            (chunk >> 24) & 0xFF,
+                            (chunk >> 16) & 0xFF,
+                            (chunk >> 8) & 0xFF,
+                            chunk & 0xFF
+                        );
+                        chunk = 0;
+                        count = 0;
+                    }
+                }
+                
+                // 余りのバイト数を考慮
+                if (count > 0) {
+                    // 必要なだけ85を掛ける
+                    for (let i = count; i < 5; i++) {
+                        chunk = chunk * 85 + 84;
+                    }
+                    
+                    // 余りのバイト数に応じて処理
+                    const bytesToOutput = count - 1;
+                    for (let i = 0; i < bytesToOutput; i++) {
+                        output += String.fromCharCode((chunk >> (24 - i * 8)) & 0xFF);
+                    }
+                }
+                
+                return btoa(output);
+            }
+            
             // PWAのインストールプロンプト
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
@@ -436,11 +519,15 @@
                     return;
                 }
                 
+                // 画像をASCII85エンコード
+                const ascii85Image = ascii85Encode(base64Image);
+                
                 // URLパラメータの作成
                 const params = new URLSearchParams();
                 params.append('title', title);
                 params.append('url', url);
-                params.append('image', base64Image);
+                params.append('img', ascii85Image); // ASCII85エンコードされた画像
+                params.append('enc', 'a85'); // エンコーディングタイプを追加
                 
                 // 現在のURLを取得
                 const currentUrl = window.location.href.split('?')[0];
@@ -450,10 +537,10 @@
                 generatedUrl.textContent = generatedUrlValue;
                 resultContainer.style.display = 'block';
                 
-                // QRコードを生成（goqr.meのAPIを使用）
+                // QRコードを生成
                 qrCodeContainer.innerHTML = '';
                 try {
-                    const goqrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${decodeURI(generatedUrlValue)}`;
+                    const goqrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(generatedUrlValue)}`;
                     qrCodeContainer.innerHTML = `<img src="${goqrUrl}" alt="QRコード">`;
                     console.log('QRコード生成成功（goqr.me API使用）');
                 } catch(error) {
@@ -502,10 +589,21 @@
             window.addEventListener('load', function() {
                 const params = new URLSearchParams(window.location.search);
                 
-                if (params.has('title') && params.has('url') && params.has('image')) {
+                if (params.has('title') && params.has('url') && (params.has('image') || params.has('img'))) {
                     const title = params.get('title');
                     const url = params.get('url');
-                    const image = params.get('image');
+                    let image = '';
+                    
+                    // エンコーディングタイプをチェック
+                    if (params.has('enc') && params.get('enc') === 'a85' && params.has('img')) {
+                        // ASCII85エンコードされた画像をデコード
+                        const ascii85Image = params.get('img');
+                        const decodedImage = ascii85Decode(ascii85Image);
+                        image = `data:image/png;base64,${decodedImage}`;
+                    } else if (params.has('image')) {
+                        // 従来のBase64エンコードされた画像
+                        image = params.get('image');
+                    }
                     
                     // PWAとしてインストールされているかチェック
                     const isPwa = window.matchMedia('(display-mode: standalone)').matches || 
@@ -519,7 +617,12 @@
                         
                         // 一時的な表示（実際にはほぼ見えない）
                         pwaView.innerHTML = `
-                            <div id="temp"></div>
+                            <img src="${image}" alt="${title}">
+                            <h2>${title}</h2>
+                            <div id="redirectMessage">
+                                <p>リダイレクト中...</p>
+                            </div>
+                            <button id="redirectNowButton">今すぐ移動</button>
                         `;
                         
                         const redirectNowButton = document.getElementById('redirectNowButton');
