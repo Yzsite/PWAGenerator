@@ -41,6 +41,7 @@
             margin-top: 10px;
             display: none;
         }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -56,6 +57,13 @@
             <input type="url" id="urlInput" placeholder="https://example.com">
             <button id="generateButton">PWA を作成</button>
         </div>
+    </div>
+
+    <div id="pwaView" class="hidden">
+        <h2 id="pwaTitle"></h2>
+        <img id="pwaImage" src="" alt="PWA アイコン" width="100">
+        <p>このアプリをホーム画面に追加すると、PWAとして動作します。</p>
+        <p>URL: <a id="pwaUrl" href=""></a></p>
     </div>
 
     <script>
@@ -104,6 +112,11 @@
             const titleInput = document.getElementById('titleInput');
             const urlInput = document.getElementById('urlInput');
             const generateButton = document.getElementById('generateButton');
+            const creatorView = document.getElementById('creatorView');
+            const pwaView = document.getElementById('pwaView');
+            const pwaTitle = document.getElementById('pwaTitle');
+            const pwaImage = document.getElementById('pwaImage');
+            const pwaUrl = document.getElementById('pwaUrl');
 
             let base64Image = '';
 
@@ -154,18 +167,18 @@
                     if (title && url && image) {
                         updateCookieExpiration(pwaId);
 
-                        const isPwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                        // 入力フォームを非表示にしてPWAビューを表示
+                        creatorView.classList.add('hidden');
+                        pwaView.classList.remove('hidden');
 
+                        pwaTitle.textContent = title;
+                        pwaImage.src = image;
+                        pwaUrl.href = url;
+                        pwaUrl.textContent = url;
+
+                        const isPwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
                         if (isPwa) {
-                            document.body.innerHTML = `<h2>${title}</h2><p>リダイレクト中...</p>`;
                             setTimeout(() => { window.location.href = url; }, 1000);
-                        } else {
-                            document.body.innerHTML = `
-                                <h2>${title}</h2>
-                                <img src="${image}" alt="${title}" width="100">
-                                <p>このアプリをホーム画面に追加すると、PWAとして動作します。</p>
-                                <p>URL: <a href="${url}">${url}</a></p>
-                            `;
                         }
                     }
                 }
